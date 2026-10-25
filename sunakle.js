@@ -1,9 +1,12 @@
 (function () {
   'use strict';
 
-  const S = window.SUNAKLE;
+  // Движок персональных разделов (SUNAKLE, Stickbat): все личные данные — в window.PERSONAL
+  const S = window.PERSONAL;
   const P = S.profile;
-  const STORE_KEY = 'sunakle_v1';
+  const STORE_KEY = S.storeKey;
+  const LEVEL_RANK = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+  const rank = lvl => LEVEL_RANK.indexOf(String(lvl).replace('+', ''));
   const KNOWN_BOX = 3; // слово считается выученным после 3 верных повторений подряд
 
   const TABS = [
@@ -123,9 +126,9 @@
 
     app.innerHTML = `
       <section class="card sk-hero">
-        <div class="sk-badge">SUNAKLE</div>
+        <div class="sk-badge">${esc(S.title)}</div>
         <h1>Твой путь от ${P.level} к ${P.target}</h1>
-        <p class="muted">Персональная программа по результату теста от ${P.date}. Понимаешь ты уже на B2, а грамматика отстаёт на уровень — поэтому главный фокус на ней. До B2 осталось <b>${P.targetScore - P.score} ${plural(P.targetScore - P.score, 'балл', 'балла', 'баллов')}</b>.</p>
+        <p class="muted">Персональная программа по результату теста от ${P.date}. ${esc(P.intro)} До ${P.target} осталось <b>${P.targetScore - P.score} ${plural(P.targetScore - P.score, 'балл', 'балла', 'баллов')}</b>.</p>
         <div class="stats">
           <div class="stat"><div class="k">Уровень</div><div class="v">${P.level}<small> · ${P.score}/100</small></div></div>
           <div class="stat"><div class="k">Цель</div><div class="v">${P.target}<small> · ${P.targetScore}+</small></div><div class="k">${esc(P.targetExam)}</div></div>
@@ -154,7 +157,7 @@
       <section class="card">
         <h2>Твой профиль</h2>
         <div class="bars">
-          ${P.skills.map(s => bar(s.name, s.c / s.n, `<b>${s.level}</b> · ${s.c}/${s.n}`, s.level.startsWith('B2') ? 'var(--ok)' : s.level.startsWith('A') ? 'var(--warn)' : 'var(--accent)')).join('')}
+          ${P.skills.map(s => bar(s.name, s.c / s.n, `<b>${s.level}</b> · ${s.c}/${s.n}`, rank(s.level) > rank(P.level) ? 'var(--ok)' : rank(s.level) < rank(P.level) ? 'var(--warn)' : 'var(--accent)')).join('')}
         </div>
         <div class="two-col" style="margin-top:20px">
           <div><h3 class="tag-ok">Сильные стороны</h3><ul class="plain-list">${P.strong.map(s => `<li>${esc(s)}</li>`).join('')}</ul></div>
@@ -188,7 +191,7 @@
     const cur = currentWeek();
     app.innerHTML = `
       <section class="card">
-        <h1>План на 12 недель: ${P.level} → ${P.target}</h1>
+        <h1>План на ${S.plan.length} ${plural(S.plan.length, 'неделю', 'недели', 'недель')}: ${P.level} → ${P.target}</h1>
         <p class="muted">Каждую неделю — одна грамматическая тема, один набор слов, сериал и чтение. Около 50 минут в день. Отмечай выполненное, прогресс сохраняется.</p>
         ${bar('Выполнено', plan.done / plan.total, `<b>${plan.done}</b>/${plan.total}`)}
       </section>
@@ -218,7 +221,7 @@
     app.innerHTML = `
       <section class="card">
         <h1>Уроки</h1>
-        <p class="muted" style="margin:0">10 уроков по темам, где у тебя были ошибки в тесте. Урок пройден, если в упражнениях не меньше 6 из 8 верных.</p>
+        <p class="muted" style="margin:0">${S.lessons.length} ${plural(S.lessons.length, 'урок', 'урока', 'уроков')} по темам, где у тебя были ошибки в тесте. Урок пройден, если в упражнениях не меньше 6 из 8 верных.</p>
       </section>
       <div class="lesson-grid">
         ${S.lessons.map((l, i) => {
@@ -331,7 +334,7 @@
     app.innerHTML = `
       <section class="card">
         <h1>Слова</h1>
-        <p class="muted">${words.length} слов и фраз, подобранных под переход на B2. Карточки работают по методу интервальных повторений: «Знаю» продвигает слово, «Не помню» возвращает его в начало. Слово выучено после ${KNOWN_BOX} верных ответов подряд.</p>
+        <p class="muted">${words.length} слов и фраз, подобранных под переход на ${P.target}. Карточки работают по методу интервальных повторений: «Знаю» продвигает слово, «Не помню» возвращает его в начало. Слово выучено после ${KNOWN_BOX} верных ответов подряд.</p>
         ${bar('Выучено', known / words.length, `<b>${known}</b>/${words.length}`, 'var(--ok)')}
       </section>
       <div class="lesson-grid">
@@ -464,7 +467,7 @@
     app.innerHTML = `
       <section class="card">
         <h1>Смотреть и читать</h1>
-        <p class="muted" style="margin:0">Подобрано под твой уровень: понимание у тебя уже B2, поэтому можно брать оригинальные сериалы и статьи. Начинай с материалов уровня B1–B2 и двигайся к B2–C1.</p>
+        <p class="muted" style="margin:0">${esc(S.mediaIntro)}</p>
       </section>
       ${S.media.map(group => `
         <section class="card">
